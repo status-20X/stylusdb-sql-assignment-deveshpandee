@@ -151,10 +151,15 @@ function applyGroupBy(data, groupByFields, aggregateFunctions) {
 }
 
 async function executeSELECTQuery(query) {
-    const { fields, table, whereClauses,joinType, joinTable, joinCondition,groupByFields,hasAggregateWithoutGroupBy } = parseQuery(query);
+    try{
+    const { fields, table, whereClauses,joinType, joinTable, joinCondition,groupByFields,hasAggregateWithoutGroupBy,orderByFields,limit,isDistinct } = parseQuery(query);
+    
+    console.log("join Table",joinTable)
+    console.log("table",table)
     let data = await readCSV(`${table}.csv`);
     console.log("data before join condition",data)
     // LOGIC for applying the joins
+    console.log("groupByfieds",groupByFields)
     if (joinTable && joinCondition) {
         const joinData = await readCSV(`${joinTable}.csv`);
         switch (joinType.toUpperCase()) {
@@ -212,32 +217,63 @@ async function executeSELECTQuery(query) {
         return [output];
     }else if(groupByFields){
         groupData = applyGroupBy(filteredData,groupByFields,fields)
+        console.log("Group dataa",groupData)
+        
+        let orderOutput = groupData;
+        if(orderByFields){
+            orderOutput=groupData.sort((a, b) => {
+                for (let { fieldName, order } of orderByFields) {
+                    if (a[fieldName] < b[fieldName]) return order === 'ASC' ? -1 : 1;
+                    if (a[fieldName] > b[fieldName]) return order === 'ASC' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        if (limit !== null) {
+            orderOutput = orderOutput.slice(0, limit);
+        }
+        
+        if (isDistinct) {
+            groupData = [...new Map(groupData.map(item => [fields.map(field => item[field]).join('|'), item])).values()];
+        }
         return groupData;
-    }else{
-        return groupData.map(row => {
+
+
+    } else{
+
+        // Order them by the specified fields
+        let orderOutput = groupData;
+        if (orderByFields) {
+            orderOutput = groupData.sort((a, b) => {
+                for (let { fieldName, order } of orderByFields) {
+                    if (a[fieldName] < b[fieldName]) return order === 'ASC' ? -1 : 1;
+                    if (a[fieldName] > b[fieldName]) return order === 'ASC' ? 1 : -1;
+                }
+                return 0;
+            });
+        }   
+        if (limit !== null) {
+            orderOutput = orderOutput.slice(0, limit);
+        }
+        console.log("orderOUTput",orderOutput)
+        if (isDistinct) {
+            orderOutput = [...new Map(orderOutput.map(item => [fields.map(field => item[field]).join('|'), item])).values()];
+        }
+        return orderOutput.map(row => {
         const selectedRow = {};
         fields.forEach(field => {
-            selectedRow[field] = row[field];
+            selectedRow[field]=row[field];
         });
+        console.log("final Solution",selectedRow)
+        
         return selectedRow;
     });
     }
-    // if (groupByFields) {
-    //     data = applyGroupBy(data, groupByFields, fields);
-    // }
-
-    // const filteredData = whereClauses.length > 0
-    // ? data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)))
-    // : data;
-
-    // // Select the specified fields
-    // return filteredData.map(row => {
-    //     const selectedRow = {};
-    //     fields.forEach(field => {
-    //         selectedRow[field] = row[field];
-    //     });
-    //     return selectedRow;
-    // });
+}
+catch(error){
+    throw new Error(`Error executing query: ${error.message}`);
+}
 }
 
 function evaluateCondition(row, clause) {
@@ -280,7 +316,12 @@ function parsingValue(value) {
     return value;
 }
 
-const query1=`SELECT student.name, enrollment.course FROM student RIGHT JOIN enrollment ON student.id=enrollment.student_id WHERE enrollment.course = 'Chemistry'`;
-const ret = executeSELECTQuery(query1)
+async function  func() {
+    const query = 'SELECT DISTINCT student.name FROM student INNER JOIN enrollment ON student.id = enrollment.student_id';
+    const result = await executeSELECTQuery(query);
+    // Expecting names of students who are enrolled in any course
 
+    console.log("Result",result)
+}
+func()
 module.exports = executeSELECTQuery;

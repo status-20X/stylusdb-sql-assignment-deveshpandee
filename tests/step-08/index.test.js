@@ -17,11 +17,14 @@ test('Parse SQL Query', () => {
         fields: ['id', 'name'],
         table: 'student',
         whereClauses: [],
-        joinType:null,
+        joinType: null,
+        groupByFields: null,
+        hasAggregateWithoutGroupBy: false,
         joinTable: null,
         joinCondition: null,
-        groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -48,9 +51,12 @@ test('Parse SQL Query with WHERE Clause', () => {
         }],
         joinCondition: null,
         joinTable: null,
-        joinType:null,
+        joinType: null,
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -80,9 +86,12 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
         }],
         joinCondition: null,
         joinTable: null,
-        joinType:null,
+        joinType: null,
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -118,7 +127,10 @@ test('Parse SQL Query with INNER JOIN', async () => {
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER',
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     })
 });
 
@@ -133,7 +145,10 @@ test('Parse SQL Query with INNER JOIN and WHERE Clause', async () => {
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER',
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     })
 });
 
@@ -179,4 +194,25 @@ test('Execute SQL Query with INNER JOIN and a WHERE Clause', async () => {
         "enrollment.course": "Mathematics",
         "student.name": "John"
     }));
+});
+
+test('Execute SQL Query with LEFT JOIN', async () => {
+    const query = 'SELECT student.name, enrollment.course FROM student LEFT JOIN enrollment ON student.id=enrollment.student_id';
+    const result = await executeSELECTQuery(query);
+    expect(result).toEqual(expect.arrayContaining([
+        expect.objectContaining({ "student.name": "Alice", "enrollment.course": null }),
+        expect.objectContaining({ "student.name": "John", "enrollment.course": "Mathematics" })
+    ]));
+    expect(result.length).toEqual(5); // 4 students, but John appears twice
+});
+
+test('Execute SQL Query with LEFT JOIN', async () => {
+    const query = 'SELECT student.name, enrollment.course FROM student LEFT JOIN enrollment ON student.id=enrollment.student_id';
+    const result = await executeSELECTQuery(query);
+    expect(result).toEqual(expect.arrayContaining([
+        expect.objectContaining({ "student.name": "Alice", "enrollment.course": null }),
+        expect.objectContaining({ "student.name": "John", "enrollment.course": "Mathematics" })
+    ]));
+    
+    expect(result.length).toEqual(5); // 4 students, but John appears twice
 });

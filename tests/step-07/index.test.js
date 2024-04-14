@@ -21,7 +21,10 @@ test('Parse SQL Query', () => {
         joinTable:null,
         joinCondition:null,
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -50,7 +53,10 @@ test('Parse SQL Query with WHERE Clause', () => {
        joinTable: null,
        joinType:null,
        groupByFields: null,
-       hasAggregateWithoutGroupBy: false
+       hasAggregateWithoutGroupBy: false,
+       orderByFields:null,
+       limit: null,
+       isDistinct: false
     });
 });
 
@@ -82,7 +88,10 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
        joinTable: null,
        joinType:null,
        groupByFields: null,
-       hasAggregateWithoutGroupBy: false
+       hasAggregateWithoutGroupBy: false,
+       orderByFields:null,
+       limit: null,
+       isDistinct: false
     });
 });
 
@@ -98,6 +107,7 @@ test('Execute SQL Query with Greater Than', async () => {
     const result = await executeSELECTQuery(queryWithGT);
     expect(result.length).toEqual(3);
     expect(result[0]).toHaveProperty('id');
+    
 });
 
 test('Execute SQL Query with Not Equal to', async () => {
