@@ -1,7 +1,7 @@
 // src/queryParser.js
 
 
-function parseQuery(query) {
+function parseSelectQuery(query) {
     // First, let's trim the query to remove any leading/trailing whitespaces
     try{
     query = query.trim();
@@ -15,19 +15,17 @@ function parseQuery(query) {
         isDistinct = true;
         query = query.replace('SELECT DISTINCT', 'SELECT');
     }
-
     const limitMatch = query.match(limitRegex);
     
     let limit = null;
     if (limitMatch) {
-        limit = parseInt(limitMatch[1]);
+        limit = parseInt(limitMatch[1],10);
         query = query.replace(limitRegex,'')
     }
     console.log("limit",limit)
     console.log(typeof(limit))
-    
-    const orderByMatch = query.match(orderByRegex);
 
+    const orderByMatch = query.match(orderByRegex);
     let orderByFields = null;
     if (orderByMatch) {
         orderByFields = orderByMatch[1].split(',').map(field => {
@@ -36,8 +34,6 @@ function parseQuery(query) {
         });
         query = query.replace(orderByRegex, '');
     }
-
-    
     const groupByMatch = query.match(groupByRegex);
     // Initialize variables for different parts of the query
     let selectPart, fromPart;
@@ -51,8 +47,7 @@ function parseQuery(query) {
 if (whereClause && whereClause.includes('GROUP BY')) {
     whereClause = whereClause.split(/\sGROUP\sBY\s/i)[0].trim();
 }
-
-
+console.log(whereClause)
     // Split the remaining query at the JOIN clause if it exists
     const joinSplit = query.split(/\s(INNER|LEFT|RIGHT) JOIN\s/i);
     selectPart = joinSplit[0].trim(); // Everything before JOIN clause
@@ -102,7 +97,7 @@ if (whereClause && whereClause.includes('GROUP BY')) {
     if (hasAggregateFunction && !groupByMatch) {
         hasAggregateWithoutGroupBy = true;
     }
-
+    console.log("where clausese",whereClauses)
     return {
         fields: fields.split(',').map(field => field.trim()),
         table: table.trim(),
@@ -116,27 +111,67 @@ if (whereClause && whereClause.includes('GROUP BY')) {
         limit,
         isDistinct
     };
-    
 }
 catch(error){
     console.log(error)
     throw new Error(`Query parsing error: ${error.message}`)
 }
+}
 
+function parseDeleteQuery(query){
+    // const deleteRegex = /^DELETE\s+FROM\s+\w+(\s+WHERE\s+.+)?;?$/i;
+    const deleteRegex = /DELETE FROM (\w+)( WHERE (.*))?/i;
+    const match = query.match(deleteRegex);
+    if (!match) {
+        throw new Error("Wrong DELETE syntax.");
+    }
+    const [, table, , whereString] = match;
+    let whereClauses = [];
+    if (whereString) {
+        whereClauses = parseWhereClause(whereString);
+    }
+
+    return {
+        type: 'DELETE',
+        table: table.trim(),
+        whereClauses
+    };
 }
 
 // src/queryParser.js
 function parseWhereClause(whereString) {
-    const conditionRegex = /(.*?)(=|!=|>|<|>=|<=)(.*)/;
+    const conditionRegex =/(.*?)(=|!=|>|<|>=|<=)(.*)/;
     return whereString.split(/ AND | OR /i).map(conditionString => {
+        if (conditionString.includes(' LIKE '))
+        {
+            const [field, pattern] = conditionString.split(/\sLIKE\s/i);
+            return { field: field.trim(), operator: 'LIKE', value: pattern.trim().replace(/^'(.*)'$/, '$1') };
+        }else{
         const match = conditionString.match(conditionRegex);
         if (match) {
             const [, field, operator, value] = match;
             return { field: field.trim(), operator, value: value.trim() };
         }
         throw new Error('Invalid WHERE clause format');
+        }
     });
+}
 
+function parseINSERTQuery(query){
+    const insertRegex = /INSERT\s+INTO\s+([^\s\(]+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i;
+    const match = query.match(insertRegex)
+
+    if(!match){
+        throw new error("Wrong INSERT INTO syntax")
+    }
+
+    const [, table, columns, values] = match;
+    return {
+        type:'INSERT',
+        table:table.trim(),
+        columns:columns.split(',').map(column => column.trim()),
+        values: values.split(',').map(value => value.trim())
+    }
 }
 
 function parseJoinClause(query) {
@@ -161,8 +196,8 @@ function parseJoinClause(query) {
     };
 }
 
-const query = 'SELECT id, name FROM student ORDER BY age DESC LIMIT 2';
-const res = parseQuery(query)
+const query = "SELECT DISTINCT name FROM student WHERE name LIKE '%e%";
+const res = parseSelectQuery(query)
 
 
-module.exports = {parseQuery,parseJoinClause};
+module.exports = {parseSelectQuery, parseDeleteQuery,parseJoinClause, parseINSERTQuery};
