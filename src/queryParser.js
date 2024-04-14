@@ -35,6 +35,7 @@ function parseSelectQuery(query) {
         query = query.replace(orderByRegex, '');
     }
     const groupByMatch = query.match(groupByRegex);
+
     // Initialize variables for different parts of the query
     let selectPart, fromPart;
 
@@ -43,6 +44,7 @@ function parseSelectQuery(query) {
     query = whereSplit[0]; // Everything before WHERE clause
 
     // WHERE clause is the second part after splitting, if it exists
+
     let whereClause = whereSplit.length > 1 ? whereSplit[1].trim() : null;
 if (whereClause && whereClause.includes('GROUP BY')) {
     whereClause = whereClause.split(/\sGROUP\sBY\s/i)[0].trim();
@@ -50,12 +52,14 @@ if (whereClause && whereClause.includes('GROUP BY')) {
 console.log(whereClause)
     // Split the remaining query at the JOIN clause if it exists
     const joinSplit = query.split(/\s(INNER|LEFT|RIGHT) JOIN\s/i);
+
     selectPart = joinSplit[0].trim(); // Everything before JOIN clause
 
     // JOIN clause is the second part after splitting, if it exists
     const joinPart = joinSplit.length > 1 ? joinSplit[1].trim() : null;
 
     // Parse the SELECT part
+
     const selectMatch = selectPart.match(selectRegex);
     if (!selectMatch) {
         throw new Error('Invalid SELECT format');
@@ -194,6 +198,7 @@ function parseJoinClause(query) {
         joinTable: null,
         joinCondition: null
     };
+
 }
 
 const query = "SELECT DISTINCT name FROM student WHERE name LIKE '%e%";

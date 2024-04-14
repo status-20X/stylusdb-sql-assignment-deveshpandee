@@ -6,3 +6,4 @@ const { readCSV, writeCSV } = require('./csvReader');
 
 
 module.exports = {readCSV, writeCSV ,parseDeleteQuery, parseSelectQuery, parseINSERTQuery, executeSELECTQuery, executeINSERTQuery, executeDELETEQuery };
+
