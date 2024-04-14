@@ -21,7 +21,10 @@ test('Parse SQL Query', () => {
         groupByFields: null,
         hasAggregateWithoutGroupBy: false,
         joinTable: null,
-        joinCondition: null
+        joinCondition: null,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -50,7 +53,10 @@ test('Parse SQL Query with WHERE Clause', () => {
         joinTable: null,
         joinType: null,
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -82,7 +88,10 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
         joinTable: null,
         joinType: null,
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     });
 });
 
@@ -118,7 +127,10 @@ test('Parse SQL Query with INNER JOIN', async () => {
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER',
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     })
 });
 
@@ -133,7 +145,10 @@ test('Parse SQL Query with INNER JOIN and WHERE Clause', async () => {
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER',
         groupByFields: null,
-        hasAggregateWithoutGroupBy: false
+        hasAggregateWithoutGroupBy: false,
+        orderByFields:null,
+        limit: null,
+        isDistinct: false
     })
 });
 
@@ -189,6 +204,7 @@ test('Execute SQL Query with LEFT JOIN', async () => {
         expect.objectContaining({ "student.name": "John", "enrollment.course": "Mathematics" })
     ]));
     expect(result.length).toEqual(5); // 4 students, but John appears twice
+
 });
 
 test('Execute SQL Query with LEFT JOIN', async () => {
@@ -198,5 +214,6 @@ test('Execute SQL Query with LEFT JOIN', async () => {
         expect.objectContaining({ "student.name": "Alice", "enrollment.course": null }),
         expect.objectContaining({ "student.name": "John", "enrollment.course": "Mathematics" })
     ]));
+    
     expect(result.length).toEqual(5); // 4 students, but John appears twice
 });
